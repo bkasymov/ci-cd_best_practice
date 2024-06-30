@@ -84,7 +84,20 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Bandit
         run: pipenv run bandit -r . -f custom
-
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t myapp:${{ github.sha }} .
+      - name: Save Docker image
+        run: docker save myapp:${{ github.sha }} > myapp.tar
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: myapp.tar
+          
   deploy_dev:
     runs-on: ubuntu-latest
     needs: build
