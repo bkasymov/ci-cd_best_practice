@@ -13,9 +13,7 @@ This document outlines my recommended Continuous Integration and Continuous Depl
 
 ### 2. Pre-commit Hooks
 I recommend using pre-commit to ensure code quality before commits:
-
-\```yaml
-# .pre-commit-config.yaml
+\```
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
