@@ -84,6 +84,21 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Bandit
         run: pipenv run bandit -r . -f custom
+
+  deploy_dev:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+      - name: Load Docker image
+        run: docker load < myapp.tar
+      - name: Deploy to dev
+        run: |
+          # Add staging deployment script here
+          echo "Deploying to staging..."        
 ```
 
 #### For main branch (staging deployment):
