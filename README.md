@@ -14,7 +14,7 @@ This document outlines my recommended Continuous Integration and Continuous Depl
 ### 2. Pre-commit Hooks
 I recommend using pre-commit to ensure code quality before commits:
 
-```yaml
+\```yaml
 # .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -31,12 +31,12 @@ repos:
     rev: 6.0.0
     hooks:
       - id: flake8
-```
+\```
 
 Install pre-commit hooks:
-```bash
+\```bash
 pre-commit install
-```
+\```
 
 ### 3. Automated Testing
 - Run unit tests locally before pushing
@@ -52,9 +52,9 @@ pre-commit install
 I propose configuring the CI pipeline differently for various branches:
 
 #### For feature branches and dev branch:
-```yaml
-# .github/workflows/ci-feature.yml
-name: CI for Feature Branches
+\```yaml
+# .github/workflows/ci-feature-dev.yml
+name: CI for Feature and Dev Branches
 
 on:
   push:
@@ -86,27 +86,20 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Bandit
         run: pipenv run bandit -r . -f custom
-```
+\```
 
-#### For main branch (includes staging deployment):
-```yaml
-# .github/workflows/ci-main.yml
-name: CI for Main Branch
+#### For main branch (staging deployment):
+\```yaml
+# .github/workflows/ci-main-staging.yml
+name: CI and Staging Deployment
 
 on:
   push:
     branches: [main]
 
 jobs:
-  test:
-    # Same as feature branch
-
-  security_scan:
-    # Same as feature branch
-
   build:
     runs-on: ubuntu-latest
-    needs: [test, security_scan]
     steps:
       - uses: actions/checkout@v3
       - name: Build Docker image
@@ -137,7 +130,14 @@ jobs:
         run: |
           # Add integration test command here
           pipenv run pytest tests/integration/
-```
+
+  security_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Bandit
+        run: pipenv run bandit -r . -f custom
+\```
 
 ### 6. Merge to Main Branch
 - Once approved and CI passes, merge the PR to the main branch
@@ -146,7 +146,7 @@ jobs:
 ### 7. Continuous Deployment
 For production deployment:
 
-```yaml
+\```yaml
 # .github/workflows/deploy-production.yml
 name: Deploy to Production
 
@@ -158,8 +158,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Download Docker image
+      - name: Download Docker image from staging
         uses: actions/download-artifact@v3
         with:
           name: docker-image
@@ -169,7 +168,7 @@ jobs:
         run: |
           # Add production deployment script here
           echo "Deploying to production..."
-```
+\```
 
 ### 8. Monitoring and Feedback
 I recommend using Prometheus for metrics collection and Grafana for visualization and alerting.
@@ -203,7 +202,7 @@ Set up alerts in Grafana for the following conditions:
 - Database connection pool utilization exceeds 80% for 5 minutes
 
 Example Prometheus alert rule:
-```yaml
+\```yaml
 groups:
 - name: example
   rules:
@@ -215,7 +214,7 @@ groups:
     annotations:
       summary: High error rate detected
       description: Error rate is above 1% for the last 5 minutes.
-```
+\```
 
 ## Recommended Tools and Technologies
 
@@ -237,7 +236,7 @@ groups:
 - Document any changes to the CI/CD process in this README
 - Use Pipfile and Pipfile.lock for consistent environments across all stages
 
-```bash
+\```bash
 # Update dependencies
 pipenv update
 
@@ -246,7 +245,7 @@ pipenv lock
 
 # Install dependencies from Pipfile.lock
 pipenv sync
-```
+\```
 
 - Commit Pipfile and Pipfile.lock to version control to ensure all environments use the same dependency versions
 
@@ -278,3 +277,4 @@ pipenv sync
 It's important to regularly update these tools and review their findings as part of the development process.
 
 For more detailed information on each step, refer to internal documentation once it's created based on these recommendations.
+```
