@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cv-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cv-server
+  template:
+    metadata:
+      labels:
+        app: cv-server
+    spec:
+      initContainers:
+        - name: fetch-cv
+          image: alpine/git
+          command:
+            - /bin/sh
+            - -c
+            - |
+              git clone https://github.com/yourusername/your-repo.git /tmp/repo &&
+              cp /tmp/repo/apps/cv/CV.pdf /cv/
+          volumeMounts:
+            - name: cv-storage
+              mountPath: /cv
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: cv-storage
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: cv-storage
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cv-service
+spec:
+  selector:
+    app: cv-server
+  ports:
+    - port: 80
+      targetPort: 80
