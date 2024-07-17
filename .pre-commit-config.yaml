@@ -1,0 +1,58 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  # - repo: https://github.com/charliermarsh/ruff-pre-commit
+  #   rev: v0.5.2
+  #   hooks:
+  #     - id: ruff
+  #       args: [--fix, --exit-non-zero-on-fix]
+
+  # - repo: https://github.com/psf/black
+  #   rev: 24.4.2
+  #   hooks:
+  #     - id: black
+
+  # - repo: https://github.com/pre-commit/mirrors-autopep8
+  #   rev: v2.0.4
+  #   hooks:
+  #     - id: autopep8
+  #       args: [--in-place]
+
+  # - repo: https://github.com/adrienverge/yamllint
+  #   rev: v1.35.1
+  #   hooks:
+  #     - id: yamllint
+  #       args: [--format, parsable, --strict]
+
+  # # - repo: https://github.com/prettier/prettier
+  # #   rev: 2.7.1
+  # #   hooks:
+  # #     - id: prettier
+  # #       args: [--write]
+  # #       files: \.(yaml|yml)$
+
+  # - repo: https://github.com/mikefarah/yq
+  #   rev: v4.30.8
+  #   hooks:
+  #     - id: yq
+  #       args: [eval, --inplace, .]
+  #       files: \.(yaml|yml)$
+
+  # - repo: https://github.com/ansible/ansible-lint
+  #   rev: v24.7.0
+  #   hooks:
+  #     - id: ansible-lint
+  #       args: [--fix]
+
+  - repo: local
+    hooks:
+      - id: check-ansible-vault-encryption
+        name: Check Ansible Vault Encryption
+        entry: ./scripts/check_encryption.sh
+        language: script
+        pass_filenames: false

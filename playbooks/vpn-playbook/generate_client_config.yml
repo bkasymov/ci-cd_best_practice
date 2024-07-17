@@ -1,0 +1,11 @@
+---
+- name: Generate client key and certificate
+  command: /etc/openvpn/easy-rsa/easyrsa build-client-full {{ user.name }} nopass
+  args:
+    creates: /etc/openvpn/easy-rsa/pki/issued/{{ user.name }}.crt
+    chdir: /etc/openvpn/easy-rsa
+
+- name: Generate client configuration
+  template:
+    src: client.ovpn.j2
+    dest: /etc/openvpn/client_configs/{{ user.name }}.ovpn

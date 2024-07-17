@@ -97,7 +97,7 @@ jobs:
         with:
           name: docker-image
           path: myapp.tar
-          
+
   deploy_dev:
     runs-on: ubuntu-latest
     needs: build
@@ -111,7 +111,7 @@ jobs:
       - name: Deploy to dev
         run: |
           # Add staging deployment script here
-          echo "Deploying to staging..."        
+          echo "Deploying to staging..."
 ```
 
 #### For main branch (staging deployment):

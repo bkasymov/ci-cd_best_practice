@@ -1,123 +1,120 @@
 ---
 - name: Install and configure PostgreSQL with SSL on custom port
-  hosts: all
-  become: yes
+  hosts: webserver
+  become: true
   vars_files:
-    - secret.yml
-
+    - vars/secret.yaml
 
   tasks:
     - name: Install prerequisites
-      apt:
+      ansible.builtin.apt:
         name:
           - gnupg2
           - wget
         state: present
 
     - name: Add PostgreSQL apt key
-      apt_key:
+      ansible.builtin.apt_key:
         url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
         state: present
 
     - name: Add PostgreSQL repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main
         state: present
         filename: pgdg
 
     - name: Update apt cache
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
 
     - name: Install PostgreSQL and dependencies
-      apt:
+      ansible.builtin.apt:
         name:
-          - "postgresql-{{ postgres_version }}"
-          - "postgresql-contrib-{{ postgres_version }}"
+          - postgresql-{{ postgres_version }}
+          - postgresql-contrib-{{ postgres_version }}
           - libpq-dev
           - python3-psycopg2
         state: present
 
     - name: Ensure PostgreSQL is started and enabled
-      service:
+      ansible.builtin.service:
         name: postgresql
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Generate self-signed SSL certificate
-      command: >
-        openssl req -new -x509 -days 365 -nodes -text 
-        -out /etc/ssl/certs/postgresql.crt 
-        -keyout /etc/ssl/private/postgresql.key 
+      ansible.builtin.command: >
+        openssl req -new -x509 -days 365 -nodes -text
+        -out /etc/ssl/certs/postgresql.crt
+        -keyout /etc/ssl/private/postgresql.key
         -subj "/CN={{ ansible_hostname }}"
       args:
         creates: /etc/ssl/certs/postgresql.crt
 
     - name: Set proper permissions for SSL key
-      file:
+      ansible.builtin.file:
         path: /etc/ssl/private/postgresql.key
         owner: postgres
         group: postgres
-        mode: '0600'
+        mode: "0600"
 
     - name: Set proper permissions for SSL certificate
-      file:
+      ansible.builtin.file:
         path: /etc/ssl/certs/postgresql.crt
         owner: postgres
         group: postgres
-        mode: '0644'
+        mode: "0644"
 
     - name: Configure PostgreSQL to use SSL and custom port
-      lineinfile:
-        path: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
       loop:
-        - { regexp: '^ssl =', line: 'ssl = on' }
-        - { regexp: '^ssl_cert_file =', line: "ssl_cert_file = '/etc/ssl/certs/postgresql.crt'" }
-        - { regexp: '^ssl_key_file =', line: "ssl_key_file = '/etc/ssl/private/postgresql.key'" }
-        - { regexp: '^port =', line: "port = {{ postgres_port }}" }
-        - { regexp: '^listen_addresses =', line: "listen_addresses = '*'" }
+        - { regexp: ^ssl =, line: ssl = on }
+        - { regexp: ^ssl_cert_file =, line: ssl_cert_file = '/etc/ssl/certs/postgresql.crt' }
+        - { regexp: ^ssl_key_file =, line: ssl_key_file = '/etc/ssl/private/postgresql.key' }
+        - { regexp: ^port =, line: "port = {{ postgres_port }}" }
+        - { regexp: ^listen_addresses =, line: listen_addresses = '*' }
       notify: Restart PostgreSQL
 
     - name: Allow SSL connections in pg_hba.conf
-      lineinfile:
-        path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
-        line: "hostssl all all 0.0.0.0/0 md5"
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        line: hostssl all all 0.0.0.0/0 md5
       notify: Restart PostgreSQL
 
-
     - name: Check if PostgreSQL user exists
-      become: yes
-      become_user: postgres
-      shell: psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='postgres'"
+      become: true
+      ansible.builtin.command: sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='postgres'"
       register: user_exists
       changed_when: false
       failed_when: false
 
     - name: Create PostgreSQL user
-      become: yes
+      become: true
       become_user: postgres
-      shell: |
+      ansible.builtin.shell: |
         psql -c "CREATE USER {{ new_user }} WITH PASSWORD '{{ new_user_password }}' CREATEDB SUPERUSER;"
       when: user_exists.stdout == ""
 
     - name: Check if database exists
-      become: yes
-      become_user: postgres
-      shell: psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ new_user }}'"
+      become: true
+      ansible.builtin.command: sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ new_user }}'"
       register: db_exists
       changed_when: false
-      failed_when: false      
+      failed_when: false
+      tags: db
 
     - name: Allow connections to custom port in firewall
-      ufw:
+      community.general.ufw:
         rule: allow
         port: "{{ postgres_port }}"
         proto: tcp
 
   handlers:
     - name: Restart PostgreSQL
-      service:
+      ansible.builtin.service:
         name: postgresql
         state: restarted

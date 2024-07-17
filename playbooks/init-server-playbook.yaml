@@ -1,14 +1,14 @@
 ---
 - name: Set up Ubuntu 24.04 server
   hosts: webserver
-  become: yes
+  become: true
   vars_files:
-    - vars/secret.yml
+    - vars/secret.yaml
 
   tasks:
     - name: Update packages
       apt:
-        update_cache: yes
+        update_cache: true
         upgrade: dist
 
     - name: Install required packages
@@ -35,7 +35,8 @@
 
     - name: Add Docker repository
       apt_repository:
-        repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release
+          }} stable
         state: present
         filename: docker
 
@@ -48,8 +49,9 @@
           - docker-buildx-plugin
           - docker-compose-plugin
         state: present
-        update_cache: yes
+        update_cache: true
 
+    # TODO should create user if it doesn't exist
     - name: Create new user
       user:
         name: "{{ new_user }}"
@@ -61,15 +63,15 @@
       user:
         name: "{{ new_user }}"
         groups: docker
-        append: yes
+        append: true
 
     - name: Allow new user to use sudo without password
       lineinfile:
         path: /etc/sudoers
         state: present
-        regexp: "^{{ new_user }}"
+        regexp: ^{{ new_user }}
         line: "{{ new_user }} ALL=(ALL) NOPASSWD: ALL"
-        validate: "visudo -cf %s"
+        validate: visudo -cf %s
 
     - name: Set up SSH keys for new user
       authorized_key:
@@ -80,15 +82,15 @@
     - name: Disable root SSH login
       lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: "^PermitRootLogin"
-        line: "PermitRootLogin no"
+        regexp: ^PermitRootLogin
+        line: PermitRootLogin no
       notify: Restart SSH
 
     - name: Allow SSH for new user
       lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: "^AllowUsers"
-        line: "AllowUsers {{ new_user }}"
+        regexp: ^AllowUsers
+        line: AllowUsers {{ new_user }}
       notify: Restart SSH
 
     - name: Configure UFW
@@ -104,7 +106,6 @@
       ufw:
         state: enabled
 
-    # TODO add to install postgresql
     - name: Install PostgreSQL
       apt:
         name: postgresql
@@ -131,12 +132,47 @@
       service:
         name: fail2ban
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Restart Docker
       service:
         name: docker
         state: restarted
+
+    - name: Download Helm installation script
+      get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-{{ helm_version }}
+        dest: /tmp/get_helm.sh
+        mode: "0700"
+      tags:
+        - helm
+
+    - name: Execute Helm installation script
+      command: /tmp/get_helm.sh
+      args:
+        creates: /usr/local/bin/helm
+      tags:
+        - helm
+
+    - name: Verify Helm installation
+      command: helm version
+      register: helm_version_output
+      changed_when: false
+      tags:
+        - helm
+
+    - name: Display Helm version
+      debug:
+        var: helm_version_output.stdout_lines
+      tags:
+        - helm
+
+    - name: Remove Helm installation script
+      file:
+        path: /tmp/get_helm.sh
+        state: absent
+      tags:
+        - helm
 
   handlers:
     - name: Restart SSH

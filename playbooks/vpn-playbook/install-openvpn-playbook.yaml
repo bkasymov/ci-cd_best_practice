@@ -1,0 +1,73 @@
+---
+- name: Install and Configure OpenVPN
+  hosts: webserver
+  become: true
+  vars_files:
+    - vpn_users.yml
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install OpenVPN and dependencies
+      package:
+        name:
+          - openvpn
+          - easy-rsa
+        state: present
+
+    - name: Copy EasyRSA files to OpenVPN directory
+      command: cp -r /usr/share/easy-rsa /etc/openvpn/
+      args:
+        creates: /etc/openvpn/easy-rsa
+
+    - name: Initialize PKI
+      command: /etc/openvpn/easy-rsa/easyrsa init-pki
+      args:
+        creates: /etc/openvpn/easy-rsa/pki
+        chdir: /etc/openvpn/easy-rsa
+
+    - name: Build CA
+      command: /etc/openvpn/easy-rsa/easyrsa build-ca nopass
+      args:
+        creates: /etc/openvpn/easy-rsa/pki/ca.crt
+        chdir: /etc/openvpn/easy-rsa
+
+    - name: Generate server key and certificate
+      command: /etc/openvpn/easy-rsa/easyrsa build-server-full server nopass
+      args:
+        creates: /etc/openvpn/easy-rsa/pki/issued/server.crt
+        chdir: /etc/openvpn/easy-rsa
+
+    - name: Generate Diffie-Hellman parameters
+      command: /etc/openvpn/easy-rsa/easyrsa gen-dh
+      args:
+        creates: /etc/openvpn/easy-rsa/pki/dh.pem
+        chdir: /etc/openvpn/easy-rsa
+
+    - name: Copy server configuration
+      template:
+        src: server.conf.j2
+        dest: /etc/openvpn/server.conf
+
+    - name: Enable IP forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        sysctl_set: true
+        state: present
+        reload: true
+
+    - name: Start and enable OpenVPN service
+      systemd:
+        name: openvpn@server
+        state: started
+        enabled: true
+
+    - name: Generate client certificates and configurations
+      include_tasks: generate_client_config.yml
+      loop: "{{ vpn_users }}"
+      loop_control:
+        loop_var: user
