@@ -1,0 +1,42 @@
+name: Build and Deploy CV
+
+on:
+  push:
+    paths:
+      - 'CV.pdf'
+      - 'Dockerfile'
+    #   - 'cv/manifests/**'
+
+env:
+  DOCKER_IMAGE: behaqosimi/cv-image
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: apps/cv/
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+
+    - name: Update Kubernetes manifests
+      run: |
+        sed -i 's|image: .*|image: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}|' cv/manifests/deployment.yaml
+
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add cv/manifests/deployment.yaml
+        git commit -m "Update image to ${{ github.sha }}" || exit 0
+        git push
