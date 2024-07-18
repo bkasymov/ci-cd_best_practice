@@ -12,30 +12,11 @@ spec:
       labels:
         app: cv-server
     spec:
-      initContainers:
-        - name: fetch-cv
-          image: alpine/git
-          command:
-            - /bin/sh
-            - -c
-            - |
-              git clone https://github.com/bkasymov/ci-cd_best_practice.git /tmp/repo &&
-              cp /tmp/repo/apps/cv/CV.pdf /cv/
-          volumeMounts:
-            - name: cv-storage
-              mountPath: /cv
       containers:
         - name: nginx
           image: nginx:alpine
           ports:
             - containerPort: 80
-          volumeMounts:
-            - name: cv-storage
-              mountPath: /usr/share/nginx/html
-      volumes:
-        - name: cv-storage
-          emptyDir: {}
-
 ---
 apiVersion: v1
 kind: Service
