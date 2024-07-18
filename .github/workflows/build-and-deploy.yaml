@@ -2,10 +2,11 @@ name: Build and Deploy CV
 
 on:
   push:
+    branches:
+    - main
     paths:
-      - 'CV.pdf'
-      - 'Dockerfile'
-    #   - 'cv/manifests/**'
+    - 'apps/cv/CV.pdf'
+    - 'apps/cv/Dockerfile'
 
 env:
   DOCKER_IMAGE: behaqosimi/cv-image
