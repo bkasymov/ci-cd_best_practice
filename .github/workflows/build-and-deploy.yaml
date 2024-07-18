@@ -7,9 +7,13 @@ on:
     paths:
     - 'apps/cv/CV.pdf'
     - 'apps/cv/Dockerfile'
+  workflow_dispatch:
 
 env:
   DOCKER_IMAGE: behaqosimi/cv-image
+
+permissions:
+  contents: write
 
 jobs:
   build-and-push:
@@ -26,18 +30,18 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
-        context: apps/cv/
+        file: apps/cv/Dockerfile
         push: true
         tags: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
     - name: Update Kubernetes manifests
       run: |
-        sed -i 's|image: .*|image: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}|' cv/manifests/deployment.yaml
+        sed -i 's|newName: .*|newName: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}|' apps/cv/manifests/overlays/cv/kustomization.yaml
 
     - name: Commit and push if changed
       run: |
         git config --global user.name 'GitHub Action'
         git config --global user.email 'action@github.com'
-        git add cv/manifests/deployment.yaml
+        git add apps/cv/manifests/overlays/cv/kustomization.yaml
         git commit -m "Update image to ${{ github.sha }}" || exit 0
         git push

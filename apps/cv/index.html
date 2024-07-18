@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Maintenance</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 80%;
+            position: relative;
+        }
+
+        h1 {
+            color: #0366d6;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        .pipeline {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .stage {
+            width: 100px;
+            height: 50px;
+            background-color: #0366d6;
+            color: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stage::after {
+            content: '►';
+            position: absolute;
+            right: -20px;
+            color: #0366d6;
+            animation: blink 1s infinite;
+        }
+
+        .stage:last-child::after {
+            content: none;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .progress {
+            height: 5px;
+            background-color: #e1e4e8;
+            margin-top: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #2ea44f;
+            animation: progress 10s linear infinite;
+        }
+
+        @keyframes progress {
+            0% {
+                width: 0;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .data-flow {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0366d6;
+            z-index: 1;
+        }
+
+        .data-packet {
+            width: 10px;
+            height: 10px;
+            background-color: #2ea44f;
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: 0;
+            animation: packet-move 5s linear infinite;
+        }
+
+        @keyframes packet-move {
+            0% {
+                left: 0;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .cloud {
+            position: absolute;
+            width: 50px;
+            height: 30px;
+            background-color: #f1f8ff;
+            border-radius: 20px;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .cloud:before,
+        .cloud:after {
+            content: '';
+            position: absolute;
+            background-color: #f1f8ff;
+            border-radius: 50%;
+        }
+
+        .cloud:before {
+            width: 25px;
+            height: 25px;
+            top: -10px;
+            left: 5px;
+        }
+
+        .cloud:after {
+            width: 35px;
+            height: 35px;
+            top: -15px;
+            right: 5px;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Site Maintenance in Progress</h1>
+        <div class="pipeline">
+            <div class="cloud"></div>
+            <div class="stage">Build</div>
+            <div class="stage">Test</div>
+            <div class="stage">Deploy</div>
+            <div class="data-flow">
+                <div class="data-packet"></div>
+            </div>
+        </div>
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+        <p>Dear valued users,</p>
+        <p>We are currently performing scheduled maintenance to enhance our infrastructure and services.</p>
+        <p>Our DevOps team is working diligently to optimize the CI/CD pipeline, ensuring faster and more reliable
+            delivery of updates.</p>
+        <p>We appreciate your patience and understanding during this process.</p>
+        <p>Thank you for your continued support!</p>
+        <p><strong>DevOps Engineer Bekhruz</strong></p>
+    </div>
+</body>
+
+</html>
