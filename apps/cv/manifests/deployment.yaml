@@ -19,7 +19,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              git clone https://github.com/yourusername/your-repo.git /tmp/repo &&
+              git clone https://github.com/bkasymov/ci-cd_best_practice.git /tmp/repo &&
               cp /tmp/repo/apps/cv/CV.pdf /cv/
           volumeMounts:
             - name: cv-storage
