@@ -8,7 +8,7 @@ commonLabels:
   app: cv-server
 images:
   - name: placeholder-image
-    newName: behaqosimi/cv-image
+    newName: behaqosimi/cv-image:003ba5737fceb017f09b06fe0c5ba611a598a665
 patchesStrategicMerge:
   - |-
     apiVersion: networking.k8s.io/v1
